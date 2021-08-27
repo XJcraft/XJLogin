@@ -29,17 +29,13 @@ public class BungeeImpl extends Manager {
             if (validAccount(player, args[0], account)) {
                 String ip = player.getAddress().getHostString();
                 Integer playerType = account.getPlayerType();
-
-                if (playerType == null)
-                    sendPlayer(player, "main");
-                else {
-                    switch (playerType) {
-                        case 1:
-                            sendPlayer(player, "official");
-                            break;
-                        default:
-                            break;
-                    }
+                switch (playerType) {
+                    case 1:
+                        sendPlayer(player, "official");
+                        break;
+                    default:
+                        sendPlayer(player, "main");
+                        break;
                 }
 
                 account.setLastAction(new Timestamp(System.currentTimeMillis()));
