@@ -20,7 +20,7 @@ import java.util.Random;
 public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter {
     private Plugin plugin;
     List<String> names;
-    private boolean isMainServer = false;
+    private boolean isMainServer = true;
 
     public SpigotImpl(Plugin plugin, HikariDataSource source) {
         super(source);

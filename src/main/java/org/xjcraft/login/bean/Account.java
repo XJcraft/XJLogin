@@ -28,4 +28,7 @@ public class Account {
         this.passwordExpired = false;
     }
 
+    public Integer getPlayerType() {
+        return playerType == null ? 0 : playerType;
+    }
 }
