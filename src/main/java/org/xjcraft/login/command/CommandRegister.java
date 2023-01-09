@@ -1,6 +1,5 @@
 package org.xjcraft.login.command;
 
-import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
@@ -18,8 +17,8 @@ public class CommandRegister extends Command {
     public void execute(CommandSender sender, String[] args) {
         if (sender instanceof ProxiedPlayer) {
             if (((ProxiedPlayer) sender).getServer().getInfo().getName().equalsIgnoreCase("login"))
-                sender.sendMessage(ChatColor.YELLOW + "自助注册暂时停止，请进qq群：225962968联系op进行账户注册");
-//                manager.register((ProxiedPlayer) sender, args);
+//                sender.sendMessage(ChatColor.YELLOW + "自助注册暂时停止，请进qq群：225962968联系op进行账户注册");
+                manager.register((ProxiedPlayer) sender, args);
         }
     }
 }

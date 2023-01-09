@@ -4,9 +4,12 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.xjcraft.login.listeners.SpigotListener;
 import org.xjcraft.login.manager.impl.SpigotImpl;
 
 import java.io.File;
+
+import static org.xjcraft.login.bean.Constant.CHANNEL;
 
 public class Spigot extends JavaPlugin {
 
@@ -20,16 +23,25 @@ public class Spigot extends JavaPlugin {
         }
         FileConfiguration config = getConfig();
         saveConfig();
-        System.out.println(HikariConfig.class.getClassLoader());
-        System.out.println(HikariDataSource.class.getClassLoader());
-        System.out.println(this.getClassLoader());
+//        System.out.println(HikariConfig.class.getClassLoader());
+//        System.out.println(HikariDataSource.class.getClassLoader());
+//        System.out.println(this.getClassLoader());
         HikariDataSource hikariDataSource = new HikariDataSource(loadConfig(config));
         SpigotImpl manager = new SpigotImpl(this, hikariDataSource);
         getCommand("xl").setExecutor(manager);
         getCommand("xl").setTabCompleter(manager);
+        SpigotListener listener = new SpigotListener(this);
+        this.getServer().getPluginManager().registerEvents(listener, this);
+        this.getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL);
+        this.getServer().getMessenger().registerIncomingPluginChannel(this, CHANNEL, listener);
 
     }
 
+    @Override
+    public void onDisable() {
+        this.getServer().getMessenger().unregisterOutgoingPluginChannel(this);
+        this.getServer().getMessenger().unregisterIncomingPluginChannel(this);
+    }
 
     private static HikariConfig loadConfig(FileConfiguration config) {
         HikariConfig hikariConfig = new HikariConfig();

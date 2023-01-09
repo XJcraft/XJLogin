@@ -1,5 +1,7 @@
 package org.xjcraft.login.manager.impl;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.zaxxer.hikari.HikariDataSource;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ProxyServer;
@@ -8,10 +10,20 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.xjcraft.login.bean.Account;
 import org.xjcraft.login.manager.Manager;
 
+import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class BungeeImpl extends Manager {
     private org.xjcraft.login.Bungee plugin;
+    private Cache<String, Account> cache = CacheBuilder.newBuilder()
+            //限制缓存大小，防止OOM
+            .maximumSize(100)
+            //提供过期策略
+            .expireAfterAccess(3, TimeUnit.MINUTES)
+            //缓存不存在的时候，自动加载
+            .build();
 
     public BungeeImpl(org.xjcraft.login.Bungee plugin, HikariDataSource source) {
         super(source);
@@ -72,9 +84,10 @@ public class BungeeImpl extends Manager {
                 return;
             }
             account = new Account(player.getName(), args[0]);
-            updateAccount(account);
-            player.sendMessage(ChatColor.YELLOW + "注册成功，即将转移……");
-            sendPlayer(player, "main");
+//            updateAccount(account);
+//            player.sendMessage(ChatColor.YELLOW + "注册成功，即将转移……");
+//            sendPlayer(player, "main");
+            createValidCode(player, account);
 
         });
 
@@ -94,7 +107,43 @@ public class BungeeImpl extends Manager {
             player.sendMessage(ChatColor.YELLOW + "密码错误！");
             return false;
         }
+        if (account.getQq() == null || account.getQq() == 0) {
+            createValidCode(player, account);
+            return false;
+        }
         player.sendMessage(ChatColor.YELLOW + "登陆成功！正在转移……");
         return true;
     }
+
+    private void createValidCode(ProxiedPlayer player, Account account) {
+        int i = (int) (new Random().nextFloat() * 1000000);
+        String code = String.format("%06d", i);
+        cache.put(code, account);
+        player.sendMessage(ChatColor.YELLOW + String.format("尚未绑定qq！请在3分钟内群内向认证机器人(2289537061)发送验证码<%s>！", code));
+    }
+
+    @Override
+    public String bindQQ(long id, String message) {
+
+        Account account = cache.getIfPresent(message);
+        if (account != null) {
+            account.setQq(id);
+            String hasDuplicate = null;
+            try {
+                hasDuplicate = findQq(id);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return "数据异常！请联系OP！";
+            }
+            if (hasDuplicate != null) {
+                return "绑定失败！你的qq已经绑定了其他账号！";
+            }
+            updateAccount(account);
+            cache.invalidate(message);
+            return "绑定成功！";
+        }
+        return "绑定失败！请重试！";
+    }
+
+
 }

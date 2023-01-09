@@ -18,6 +18,7 @@ public class Account {
     Boolean passwordExpired;
     Integer playerType;
     String inviter;
+    Long qq;
 
     public Account(String name, String password) {
         this.name = name;
@@ -31,4 +32,6 @@ public class Account {
     public Integer getPlayerType() {
         return playerType == null ? 0 : playerType;
     }
+
+
 }

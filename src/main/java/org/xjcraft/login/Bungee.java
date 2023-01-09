@@ -8,13 +8,15 @@ import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.xjcraft.login.command.CommandLogin;
 import org.xjcraft.login.command.CommandRegister;
-import org.xjcraft.login.listeners.LoginListener;
+import org.xjcraft.login.listeners.BungeeListener;
 import org.xjcraft.login.manager.impl.BungeeImpl;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+
+import static org.xjcraft.login.bean.Constant.CHANNEL;
 
 public class Bungee extends Plugin {
     @Override
@@ -34,11 +36,15 @@ public class Bungee extends Plugin {
             Configuration configuration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(getDataFolder(), "config.yml"));
             HikariDataSource hikariDataSource = new HikariDataSource(loadConfig(configuration));
             BungeeImpl manager = new BungeeImpl(this, hikariDataSource);
-            getProxy().getPluginManager().registerListener(this, new LoginListener(this, manager));
+            BungeeListener listener = new BungeeListener(this, manager);
+
+            getProxy().getPluginManager().registerListener(this, listener);
             getProxy().getPluginManager().registerCommand(this, new CommandLogin("login", manager));
             getProxy().getPluginManager().registerCommand(this, new CommandLogin("l", manager));
             getProxy().getPluginManager().registerCommand(this, new CommandRegister("register", manager));
             getProxy().getPluginManager().registerCommand(this, new CommandRegister("r", manager));
+            getProxy().registerChannel(CHANNEL);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
