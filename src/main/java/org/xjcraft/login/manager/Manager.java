@@ -54,8 +54,8 @@ public class Manager {
             if (resultSet.next()) {
                 return resultSet.getString(1);
             }
-            return null;
         }
+        return null;
     }
 
     protected void updateAccount(Account account) {
