@@ -13,7 +13,10 @@ import org.xjcraft.login.bean.Account;
 import org.xjcraft.login.manager.Manager;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
 public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter {
     private Plugin plugin;
@@ -216,13 +219,7 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
 
                 }
                 if (strings.length > 0) {
-                    Iterator<String> iterator = list.iterator();
-                    while (iterator.hasNext()) {
-                        String next = iterator.next();
-                        if (!next.startsWith(strings[0])) {
-                            iterator.remove();
-                        }
-                    }
+                    list.removeIf(next -> !next.startsWith(strings[0]));
                 }
                 return list;
             case 2:
@@ -231,15 +228,12 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
                     case "status":
                     case "edit":
                         ArrayList<String> pattenList = new ArrayList<>();
-                        if (strings.length > 1) {
-                            for (String name : names) {
-                                if (name.startsWith(strings[1])) {
-                                    pattenList.add(name);
-                                }
+                        for (String name : names) {
+                            if (name.startsWith(strings[1])) {
+                                pattenList.add(name);
                             }
-                            return pattenList;
                         }
-                        return names;
+                        return pattenList;
                     case "chgpw":
                     case "r":
                     case "register":
@@ -247,14 +241,25 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
                             add("password");
                         }};
                     case "invite":
+                    case "bind":
                         return new ArrayList<String>() {{
                             add("playerName");
                         }};
                 }
             case 3:
-                return new ArrayList<String>() {{
-                    add("password");
-                }};
+                switch (strings[0]) {
+                    case "chgpw":
+                    case "r":
+                    case "register":
+                        return new ArrayList<String>() {{
+                            add("password");
+                        }};
+                    case "bind":
+                        return new ArrayList<String>() {{
+                            add("qq");
+                        }};
+                }
+
         }
         return list;
     }

@@ -35,6 +35,7 @@ public class SpigotListener implements Listener, PluginMessageListener {
         String name = event.getPlayer().getName();
         String message = event.getMessage();
         if (!message.startsWith("#")) return;
+        message = message.substring(1);
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF(name);
         out.writeUTF(message);
