@@ -12,10 +12,8 @@ import org.bukkit.plugin.Plugin;
 import org.xjcraft.login.bean.Account;
 import org.xjcraft.login.manager.Manager;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.sql.SQLException;
+import java.util.*;
 
 public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter {
     private Plugin plugin;
@@ -45,6 +43,10 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
                     if (args.length > 2)
                         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> editAccount(sender, args));
                     return true;
+                case "bind":
+                    if (args.length > 2)
+                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> bindAccount(sender, args));
+                    return true;
                 case "status":
                     if (args.length > 1)
                         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> statusAccount(sender, args[1]));
@@ -67,12 +69,46 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
         return false;
     }
 
+    private void bindAccount(CommandSender sender, String[] args) {
+        String name = args[1];
+        Account current = getAccount(name);
+        for (OfflinePlayer offlinePlayer : plugin.getServer().getOperators()) {
+            if (Objects.equals(offlinePlayer.getName(), name)) {
+                sender.sendMessage("不允许修改管理员密码！");
+                return;
+            }
+        }
+        if (current == null) {
+            sender.sendMessage("用户不存在");
+            return;
+        }
+        String qq = args[2];
+        try {
+            long l = Long.parseLong(qq);
+            String old = findQq(l);
+            if (old != null) {
+                Account account = getAccount(old);
+                account.setQq(0L);
+                updateAccount(account);
+            }
+            current.setQq(l);
+            updateAccount(current);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            sender.sendMessage("数据错误！请联系Ree检查错误");
+        }
+        sender.sendMessage("绑定成功!");
+        statusAccount(sender, name);
+
+    }
+
 
     private void editAccount(CommandSender sender, String[] args) {
         String name = args[1];
         String pwd = args[2];
         for (OfflinePlayer offlinePlayer : plugin.getServer().getOperators()) {
-            if (offlinePlayer.getName().equals(name)) {
+            if (Objects.equals(offlinePlayer.getName(), name)) {
                 sender.sendMessage("不允许修改管理员密码！");
                 return;
             }
@@ -89,6 +125,7 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
         }
         sender.sendMessage(ChatColor.BLUE + "=====================================================");
         sender.sendMessage(ChatColor.YELLOW + "玩家：" + account.getName());
+        sender.sendMessage(ChatColor.YELLOW + "QQ：" + account.getQq());
         sender.sendMessage(ChatColor.YELLOW + "上次登陆：" + account.getLastAction());
         sender.sendMessage(ChatColor.YELLOW + "登陆失败：" + account.getLoginFails());
         sender.sendMessage(ChatColor.YELLOW + "曾用ip：" + account.getIps());
@@ -155,6 +192,7 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
             commandSender.sendMessage("/xl create <player> <password> 创建用户");
             commandSender.sendMessage("/xl edit <player> <password> 修改用户密码");
             commandSender.sendMessage("/xl status <player> 查看用户");
+            commandSender.sendMessage("/xl bind <player> <qq> 手工绑定用户");
         }
         return true;
     }
@@ -174,6 +212,7 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
                     list.add("create");
                     list.add("status");
                     list.add("edit");
+                    list.add("bind");
 
                 }
                 if (strings.length > 0) {

@@ -34,6 +34,7 @@ public class SpigotListener implements Listener, PluginMessageListener {
     public void chat(AsyncPlayerChatEvent event) {
         String name = event.getPlayer().getName();
         String message = event.getMessage();
+        if (!message.startsWith("#")) return;
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF(name);
         out.writeUTF(message);
