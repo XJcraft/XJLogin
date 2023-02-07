@@ -81,7 +81,12 @@ public class Manager {
             statement.setBoolean(6, account.getPasswordExpired());
             statement.setInt(7, account.getPlayerType());
             statement.setString(8, account.getInviter());
-            statement.setLong(9, account.getQq());
+            if (account.getQq() != null) {
+                statement.setLong(9, account.getQq());
+            } else {
+                statement.setNull(9, java.sql.Types.NULL);
+
+            }
             statement.setString(10, account.getPassword());
             statement.setString(11, account.getIps());
             statement.setTimestamp(12, account.getLastAction());
@@ -89,7 +94,11 @@ public class Manager {
             statement.setBoolean(14, account.getPasswordExpired());
             statement.setInt(15, account.getPlayerType());
             statement.setString(16, account.getInviter());
-            statement.setLong(17, account.getQq());
+            if (account.getQq() != null) {
+                statement.setLong(17, account.getQq());
+            } else {
+                statement.setNull(17, java.sql.Types.NULL);
+            }
             statement.execute();
 
         } catch (SQLException e) {
