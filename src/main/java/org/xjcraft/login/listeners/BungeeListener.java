@@ -25,10 +25,7 @@ import org.xjcraft.login.manager.Manager;
 import org.xjcraft.login.util.StringUtil;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.xjcraft.login.bean.Constant.CHANNEL;
@@ -38,6 +35,7 @@ public class BungeeListener implements Listener {
     private Manager manager;
     private List<String> chats = new ArrayList<>();
     private long timestamp = 0;
+    private long cmdOnlineTimestamp = 0;
     ScheduledTask task;
     private final Object lock = new Object();
 
@@ -93,6 +91,8 @@ public class BungeeListener implements Listener {
                 return;
             }
             if (!event.getMessage().startsWith("#")) return;
+            List<Long> onlineBots = MiraiBot.getOnlineBots();
+            if (event.getBotID() != onlineBots.get(0)) return;
             String name = null;
             try {
                 String serverId = manager.findQq(event.getSenderID());
@@ -119,6 +119,8 @@ public class BungeeListener implements Listener {
     private void doCommand(MiraiGroupMessageEvent event) {
         switch (event.getMessage()) {
             case "/online":
+                if (System.currentTimeMillis() < cmdOnlineTimestamp) return;
+                cmdOnlineTimestamp = System.currentTimeMillis() + 1000;
                 StringBuilder result = new StringBuilder();
                 Map<String, ServerInfo> servers = ProxyServer.getInstance().getServers();
                 for (Map.Entry<String, ServerInfo> entry : servers.entrySet()) {
@@ -127,7 +129,12 @@ public class BungeeListener implements Listener {
                         result.append(String.format("%s(%d):%s\n", entry.getValue().getName(), players.size(), StringUtil.join(players.stream().map(CommandSender::getName).toArray(), ",")));
                     }
                 }
-                event.getGroup().sendMessage(result.toString());
+                if (result.length() > 0) {
+                    event.getGroup().sendMessage(result.toString());
+                } else {
+                    event.getGroup().sendMessage("无人生还！");
+
+                }
                 break;
             default:
                 break;
@@ -162,12 +169,13 @@ public class BungeeListener implements Listener {
     public void sendChatHistory() {
         List<Long> onlineBots = MiraiBot.getOnlineBots();
         if (onlineBots.size() <= 0) {
-            MiraiBot.getBot(2289537061L).doOnline();
+//            MiraiBot.getBot(2289537061L).doOnline();
             return;
         }
 
         synchronized (lock) {
             if (chats.size() <= 0) return;
+            Collections.shuffle(onlineBots);
             MiraiBot bot = MiraiBot.getBot(onlineBots.get(0));
             MiraiGroup group = bot.getGroup(225962968L);
 
