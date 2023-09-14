@@ -150,20 +150,24 @@ public class BungeeListener implements Listener {
             String text = in.readUTF();
             chats.add("<" + name + "> " + text);
             System.out.println("onPluginMessageReceived：" + Thread.currentThread().getName());
-            synchronized (lock) {
-                if (System.currentTimeMillis() - timestamp > 1000 * 10) {
-                    plugin.getProxy().getScheduler().runAsync(plugin, this::sendChatHistory);
-                } else if (task == null) {
-                    task = plugin.getProxy().getScheduler().schedule(plugin, () ->
-                                    plugin.getProxy().getScheduler().runAsync(plugin, this::sendChatHistory),
-                            1000 * 10 - System.currentTimeMillis() + timestamp, TimeUnit.MILLISECONDS);
-
-                }
-            }
-            timestamp = System.currentTimeMillis();
+            triggerMessageTimer();
 
 
         }
+    }
+
+    private void triggerMessageTimer() {
+        synchronized (lock) {
+            if (System.currentTimeMillis() - timestamp > 1000 * 10) {
+                plugin.getProxy().getScheduler().runAsync(plugin, this::sendChatHistory);
+            } else if (task == null) {
+                task = plugin.getProxy().getScheduler().schedule(plugin, () ->
+                                plugin.getProxy().getScheduler().runAsync(plugin, this::sendChatHistory),
+                        1000 * 10 - System.currentTimeMillis() + timestamp, TimeUnit.MILLISECONDS);
+
+            }
+        }
+        timestamp = System.currentTimeMillis();
     }
 
     public void sendChatHistory() {
@@ -187,5 +191,6 @@ public class BungeeListener implements Listener {
 
     public void addMessage(String message) {
         chats.add(message);
+        triggerMessageTimer();
     }
 }
