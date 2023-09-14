@@ -185,4 +185,7 @@ public class BungeeListener implements Listener {
         }
     }
 
+    public void addMessage(String message) {
+        chats.add(message);
+    }
 }

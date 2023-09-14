@@ -6,6 +6,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
+import org.xjcraft.login.api.MessageAPI;
 import org.xjcraft.login.command.CommandLogin;
 import org.xjcraft.login.command.CommandRegister;
 import org.xjcraft.login.listeners.BungeeListener;
@@ -37,7 +38,7 @@ public class Bungee extends Plugin {
             HikariDataSource hikariDataSource = new HikariDataSource(loadConfig(configuration));
             BungeeImpl manager = new BungeeImpl(this, hikariDataSource);
             BungeeListener listener = new BungeeListener(this, manager);
-
+            MessageAPI.setMessageManager(listener);
             getProxy().getPluginManager().registerListener(this, listener);
             getProxy().getPluginManager().registerCommand(this, new CommandLogin("login", manager));
             getProxy().getPluginManager().registerCommand(this, new CommandLogin("l", manager));
