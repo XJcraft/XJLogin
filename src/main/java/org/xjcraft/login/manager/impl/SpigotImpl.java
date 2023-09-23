@@ -86,7 +86,7 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
         Account current = getAccount(name);
         for (OfflinePlayer offlinePlayer : plugin.getServer().getOperators()) {
             if (Objects.equals(offlinePlayer.getName(), name)) {
-                sender.sendMessage("不允许修改管理员密码！");
+                sender.sendMessage("不允许修改管理员QQ！");
                 return;
             }
         }
