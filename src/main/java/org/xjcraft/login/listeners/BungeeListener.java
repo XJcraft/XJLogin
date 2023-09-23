@@ -76,7 +76,7 @@ public class BungeeListener implements Listener {
 
     @EventHandler
     public void chat(MiraiFriendMessageEvent event) {
-        System.out.println("MiraiFriendMessageEvent：" + Thread.currentThread().getName());
+//        System.out.println("MiraiFriendMessageEvent：" + Thread.currentThread().getName());
         String msg = doBind(event.getMessage(), event.getSenderID());
         event.getFriend().sendMessage(msg);
     }
@@ -84,7 +84,7 @@ public class BungeeListener implements Listener {
     @EventHandler
     public void chat(MiraiGroupMessageEvent event) {
         if (event.getGroupID() == 225962968L) {
-            System.out.println("MiraiGroupMessageEvent：" + Thread.currentThread().getName());
+//            System.out.println("MiraiGroupMessageEvent：" + Thread.currentThread().getName());
 //            System.out.println(event.getMessage());
             if (event.getMessage().startsWith("/")) {
                 doCommand(event);
@@ -189,8 +189,5 @@ public class BungeeListener implements Listener {
         }
     }
 
-    public void addMessage(String message) {
-        chats.add(message);
-        triggerMessageTimer();
-    }
+
 }

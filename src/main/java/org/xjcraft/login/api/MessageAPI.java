@@ -1,16 +1,15 @@
 package org.xjcraft.login.api;
 
-import org.xjcraft.login.listeners.BungeeListener;
+import org.xjcraft.login.listeners.SpigotListener;
 
 public class MessageAPI {
-    private static BungeeListener listener;
+    private static SpigotListener listener;
 
     public static void sendQQMessage(String message) {
         listener.addMessage(message);
     }
 
-    public static void setMessageManager(BungeeListener listener) {
-
+    public static void setMessageManager(SpigotListener listener) {
         MessageAPI.listener = listener;
     }
 }

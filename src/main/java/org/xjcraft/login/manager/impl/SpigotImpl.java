@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.xjcraft.login.api.MessageAPI;
 import org.xjcraft.login.bean.Account;
 import org.xjcraft.login.manager.Manager;
 
@@ -54,6 +55,10 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
                     if (args.length > 1)
                         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> statusAccount(sender, args[1]));
                     return true;
+                case "say":
+                    if (args.length > 1)
+                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> say(sender, args[1]));
+                    return true;
             }
         }
         switch (args[0]) {
@@ -70,6 +75,10 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
 
         }
         return false;
+    }
+
+    private void say(CommandSender sender, String arg) {
+        MessageAPI.sendQQMessage(arg);
     }
 
     private void bindAccount(CommandSender sender, String[] args) {
@@ -196,6 +205,7 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
             commandSender.sendMessage("/xl edit <player> <password> 修改用户密码");
             commandSender.sendMessage("/xl status <player> 查看用户");
             commandSender.sendMessage("/xl bind <player> <qq> 手工绑定用户");
+            commandSender.sendMessage("/xl say <message> 发送qq消息");
         }
         return true;
     }

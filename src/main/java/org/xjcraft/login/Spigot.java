@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.xjcraft.login.api.MessageAPI;
 import org.xjcraft.login.listeners.SpigotListener;
 import org.xjcraft.login.manager.impl.SpigotImpl;
 
@@ -31,6 +32,7 @@ public class Spigot extends JavaPlugin {
         getCommand("xl").setExecutor(manager);
         getCommand("xl").setTabCompleter(manager);
         SpigotListener listener = new SpigotListener(this);
+        MessageAPI.setMessageManager(listener);
         this.getServer().getPluginManager().registerEvents(listener, this);
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL);
         this.getServer().getMessenger().registerIncomingPluginChannel(this, CHANNEL, listener);
