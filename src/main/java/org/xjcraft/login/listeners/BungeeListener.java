@@ -184,6 +184,7 @@ public class BungeeListener implements Listener {
             MiraiGroup group = bot.getGroup(225962968L);
 
             group.sendMessage(StringUtil.join(chats.toArray(), "\n"));
+            plugin.getLogger().info("send " + chats.size() + " messages via " + bot.getID() + " to qq group:" + StringUtil.join(chats.toArray(), ";"));
             chats.clear();
             task = null;
         }
