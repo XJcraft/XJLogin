@@ -42,7 +42,7 @@ public class SpigotListener implements Listener, PluginMessageListener {
         event.getPlayer().sendPluginMessage(plugin, CHANNEL, out.toByteArray());
     }
 
-    public void addMessage(String message) {
+    public synchronized void addMessage(String message) {
         plugin.getServer().getOnlinePlayers().stream().findAny().ifPresent(player -> {
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
             out.writeUTF("Server");

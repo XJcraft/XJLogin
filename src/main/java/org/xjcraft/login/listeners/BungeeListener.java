@@ -25,8 +25,12 @@ import org.xjcraft.login.manager.Manager;
 import org.xjcraft.login.util.StringUtil;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.xjcraft.login.bean.Constant.CHANNEL;
 
@@ -37,7 +41,7 @@ public class BungeeListener implements Listener {
     private long timestamp = 0;
     private long cmdOnlineTimestamp = 0;
     ScheduledTask task;
-    private final Object lock = new Object();
+    private final AtomicInteger lock = new AtomicInteger();
 
     public BungeeListener(Bungee plugin, Manager manager) {
         this.plugin = plugin;
@@ -179,8 +183,7 @@ public class BungeeListener implements Listener {
 
         synchronized (lock) {
             if (chats.size() <= 0) return;
-            Collections.shuffle(onlineBots);
-            MiraiBot bot = MiraiBot.getBot(onlineBots.get(0));
+            MiraiBot bot = MiraiBot.getBot(onlineBots.get(lock.addAndGet(1) % onlineBots.size()));
             MiraiGroup group = bot.getGroup(225962968L);
 
             group.sendMessage(StringUtil.join(chats.toArray(), "\n"));
