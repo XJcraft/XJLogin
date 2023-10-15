@@ -45,7 +45,7 @@ public class SpigotListener implements Listener, PluginMessageListener {
     public synchronized void addMessage(String message) {
         plugin.getServer().getOnlinePlayers().stream().findAny().ifPresent(player -> {
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF("Server");
+            out.writeUTF("XJCraft");
             out.writeUTF(message);
             player.sendPluginMessage(plugin, CHANNEL, out.toByteArray());
         });
