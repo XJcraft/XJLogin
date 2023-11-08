@@ -1,5 +1,8 @@
 package org.xjcraft.login.manager;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.zaxxer.hikari.HikariDataSource;
 import org.xjcraft.login.bean.Account;
 
@@ -9,11 +12,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class Manager {
 
     private HikariDataSource source;
-
+    LoadingCache<String, Account> cache;
     public Manager(HikariDataSource source) {
         this.source = source;
         try {
@@ -21,6 +26,16 @@ public class Manager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        CacheLoader<String, Account> loader = new CacheLoader<String, Account>() {
+            @Override
+            public Account load(String key) {
+                return getAccount(key);
+            }
+        };
+
+        cache = CacheBuilder.newBuilder()
+                .expireAfterAccess(5, TimeUnit.MINUTES)
+                .build(loader);
     }
 
     private void initTable() throws SQLException {
@@ -36,6 +51,8 @@ public class Manager {
                             "  `playerType` int(11) unsigned DEFAULT 0,\n" +
                             "  `inviter` varchar(255) DEFAULT NULL,\n" +
                             "  `qq` int(15) DEFAULT NULL,\n" +
+                            "  `mute` bit(1) NOT NULL DEFAULT b'0',\n" +
+                            "  `hide` bit(1) NOT NULL DEFAULT b'0',\n" +
                             "  PRIMARY KEY (`name`) USING BTREE,\n" +
                             "  UNIQUE KEY `qq` (`qq`) USING BTREE,\n" +
                             "  KEY `name` (`name`) USING BTREE\n" +
@@ -63,8 +80,8 @@ public class Manager {
         try (Connection connection = source.getConnection()) {
 
             PreparedStatement statement = connection.prepareStatement("INSERT INTO `CrazyLogin_accounts` " +
-                    "( `name`, `password`, `ips`, `lastAction`, `loginFails`, `passwordExpired`, `playerType`, `inviter`,`qq` ) VALUES " +
-                    "( ?, ?, ?, ?, ?, ? , ?, ? ,? )  ON DUPLICATE KEY UPDATE " +
+                    "( `name`, `password`, `ips`, `lastAction`, `loginFails`, `passwordExpired`, `playerType`, `inviter`,`qq` ,`mute`,`hide`) VALUES " +
+                    "( ?, ?, ?, ?, ?, ? , ?, ? ,? , ? ,? )  ON DUPLICATE KEY UPDATE " +
                     "`password` = ?," +
                     " `ips` =?," +
                     " `lastAction` = ?," +
@@ -72,7 +89,10 @@ public class Manager {
                     "`passwordExpired` = ?," +
                     " `playerType` = ?, " +
                     " `inviter` = ?, " +
-                    "`qq` = ?;");
+                    "`qq` = ?," +
+                    "`mute` = ?," +
+                    "`hide` = ?" +
+                    ";");
             statement.setString(1, account.getName());
             statement.setString(2, account.getPassword());
             statement.setString(3, account.getIps());
@@ -87,25 +107,36 @@ public class Manager {
                 statement.setNull(9, java.sql.Types.NULL);
 
             }
-            statement.setString(10, account.getPassword());
-            statement.setString(11, account.getIps());
-            statement.setTimestamp(12, account.getLastAction());
-            statement.setInt(13, account.getLoginFails());
-            statement.setBoolean(14, account.getPasswordExpired());
-            statement.setInt(15, account.getPlayerType());
-            statement.setString(16, account.getInviter());
+            statement.setBoolean(10, account.getMute());
+            statement.setBoolean(11, account.getHide());
+            statement.setString(12, account.getPassword());
+            statement.setString(13, account.getIps());
+            statement.setTimestamp(14, account.getLastAction());
+            statement.setInt(15, account.getLoginFails());
+            statement.setBoolean(16, account.getPasswordExpired());
+            statement.setInt(17, account.getPlayerType());
+            statement.setString(18, account.getInviter());
             if (account.getQq() != null) {
-                statement.setLong(17, account.getQq());
+                statement.setLong(19, account.getQq());
             } else {
-                statement.setNull(17, java.sql.Types.NULL);
+                statement.setNull(19, java.sql.Types.NULL);
             }
+            statement.setBoolean(20, account.getMute());
+            statement.setBoolean(21, account.getHide());
             statement.execute();
-
+            cache.invalidate(account.getName());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    public Account getCachedAccount(String name) {
+        try {
+            return cache.get(name);
+        } catch (ExecutionException e) {
+            return null;
+        }
+    }
     protected Account getAccount(String name) {
         try (Connection connection = source.getConnection()) {
 
@@ -122,7 +153,9 @@ public class Manager {
                         resultSet.getBoolean("passwordExpired"),
                         resultSet.getInt("playerType"),
                         resultSet.getString("inviter"),
-                        resultSet.getLong("qq")
+                        resultSet.getLong("qq"),
+                        resultSet.getBoolean("mute"),
+                        resultSet.getBoolean("hide")
                 );
             }
         } catch (SQLException e) {

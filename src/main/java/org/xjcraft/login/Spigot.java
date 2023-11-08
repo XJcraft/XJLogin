@@ -31,7 +31,7 @@ public class Spigot extends JavaPlugin {
         SpigotImpl manager = new SpigotImpl(this, hikariDataSource);
         getCommand("xl").setExecutor(manager);
         getCommand("xl").setTabCompleter(manager);
-        SpigotListener listener = new SpigotListener(this);
+        SpigotListener listener = new SpigotListener(this, manager);
         MessageAPI.setMessageManager(listener);
         this.getServer().getPluginManager().registerEvents(listener, this);
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL);

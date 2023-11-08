@@ -19,6 +19,8 @@ public class Account {
     Integer playerType;
     String inviter;
     Long qq;
+    Boolean mute;
+    Boolean hide;
 
     public Account(String name, String password) {
         this.name = name;
@@ -27,6 +29,8 @@ public class Account {
         this.lastAction = new Timestamp(System.currentTimeMillis());
         this.loginFails = 0;
         this.passwordExpired = false;
+        this.mute = false;
+        this.hide = false;
     }
 
     public Integer getPlayerType() {

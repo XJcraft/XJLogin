@@ -72,7 +72,24 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
                 if (args.length > 1)
                     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> invite(sender, args));
                 return true;
-
+            case "mute":
+                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                    Account account = getAccount(sender.getName());
+                    if (account == null) return;
+                    account.setMute(!account.getMute());
+                    updateAccount(account);
+                    sender.sendMessage("已" + (account.getMute() ? "关闭" : "开启") + "qq群消息转发");
+                });
+                return true;
+            case "hide":
+                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                    Account account = getAccount(sender.getName());
+                    if (account == null) return;
+                    account.setHide(!account.getHide());
+                    updateAccount(account);
+                    sender.sendMessage("已" + (account.getHide() ? "关闭" : "开启") + "我的游戏消息转发");
+                });
+                return true;
         }
         return false;
     }
@@ -206,6 +223,8 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
             commandSender.sendMessage("/xl status <player> 查看用户");
             commandSender.sendMessage("/xl bind <player> <qq> 手工绑定用户");
             commandSender.sendMessage("/xl say <message> 发送qq消息");
+            commandSender.sendMessage("/xl mute 开关qq群消息转发");
+            commandSender.sendMessage("/xl hide 开关我的游戏消息");
         }
         return true;
     }
@@ -221,6 +240,8 @@ public class SpigotImpl extends Manager implements CommandExecutor, TabCompleter
                 list.add("r");
                 list.add("register");
                 list.add("invite");
+                list.add("hide");
+                list.add("mute");
                 if (commandSender.isOp() && isMainServer) {
                     list.add("create");
                     list.add("status");

@@ -1,5 +1,9 @@
 package org.xjcraft.login.listeners;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalCause;
+import com.google.common.cache.RemovalListener;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -25,10 +29,8 @@ import org.xjcraft.login.manager.Manager;
 import org.xjcraft.login.util.StringUtil;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,10 +44,28 @@ public class BungeeListener implements Listener {
     private long cmdOnlineTimestamp = 0;
     ScheduledTask task;
     private final AtomicInteger lock = new AtomicInteger();
+    Cache<String, Boolean> receiveCache;
+    Cache<String, Set<Long>> sendCache;
 
     public BungeeListener(Bungee plugin, Manager manager) {
         this.plugin = plugin;
         this.manager = manager;
+
+        receiveCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(10, TimeUnit.SECONDS).build();
+        sendCache = CacheBuilder.newBuilder()
+                .expireAfterWrite(10, TimeUnit.SECONDS)
+                .removalListener((RemovalListener<String, Set<Long>>) notification -> {
+                    if (notification.getCause() == RemovalCause.EXPIRED) {
+                        MiraiBot.getOnlineBots().stream().filter(id -> !notification.getValue().contains(id)).findAny().ifPresent(aLong -> {
+                            MiraiBot bot = MiraiBot.getBot(aLong);
+                            bot.getGroup(225962968L).sendMessage(notification.getKey());
+                            plugin.getLogger().info("resend  messages via " + bot.getID() + " to qq group:" + StringUtil.join(chats.toArray(), ";"));
+
+                        });
+                    }
+                })
+                .build();
 
     }
 
@@ -86,17 +106,28 @@ public class BungeeListener implements Listener {
     }
 
     @EventHandler
-    public void chat(MiraiGroupMessageEvent event) {
+    public void chat(MiraiGroupMessageEvent event) throws ExecutionException {
         if (event.getGroupID() == 225962968L) {
 //            System.out.println("MiraiGroupMessageEvent：" + Thread.currentThread().getName());
 //            System.out.println(event.getMessage());
+            try {
+                if (MiraiBot.getBot(event.getSenderID()) != null) {
+                    return;
+                }
+            } catch (NoSuchElementException ignored) {
+            }
             if (event.getMessage().startsWith("/")) {
                 doCommand(event);
                 return;
             }
-            if (!event.getMessage().startsWith("#")) return;
-            List<Long> onlineBots = MiraiBot.getOnlineBots();
-            if (event.getBotID() != onlineBots.get(0)) return;
+//            if (!event.getMessage().startsWith("#")) return;
+//            List<Long> onlineBots = MiraiBot.getOnlineBots();
+            String s = event.getSenderName() + event.getMessage();
+            if (receiveCache.get(s, () -> false)) {
+                return;
+            }
+            receiveCache.put(s, true);
+//            if (event.getBotID() != onlineBots.get(0)) return;
             String name = null;
             try {
                 String serverId = manager.findQq(event.getSenderID());
@@ -110,7 +141,8 @@ public class BungeeListener implements Listener {
 
                     ByteArrayDataOutput out = ByteStreams.newDataOutput();
 //                    out.writeUTF(SUB_CHANNEL_INCOME);
-                    out.writeUTF("<" + name + "> " + event.getMessage().substring(1));
+                    String message = event.getMessage();//.substring(1);
+                    out.writeUTF("<" + name + "> " + message);
                     player.getServer().getInfo().sendData(CHANNEL, out.toByteArray());
                     return;
                 }
@@ -186,7 +218,9 @@ public class BungeeListener implements Listener {
             MiraiBot bot = MiraiBot.getBot(onlineBots.get(lock.addAndGet(1) % onlineBots.size()));
             MiraiGroup group = bot.getGroup(225962968L);
 
-            group.sendMessage(StringUtil.join(chats.toArray(), "\n"));
+            String message = StringUtil.join(chats.toArray(), "\n");
+            sendCache.put(message, Set.of(bot.getID()));
+            group.sendMessage(message);
             plugin.getLogger().info("send " + chats.size() + " messages via " + bot.getID() + " to qq group:" + StringUtil.join(chats.toArray(), ";"));
             chats.clear();
             task = null;

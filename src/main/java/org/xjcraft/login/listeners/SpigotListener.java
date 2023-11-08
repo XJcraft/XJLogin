@@ -10,14 +10,18 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.xjcraft.login.Spigot;
+import org.xjcraft.login.bean.Account;
+import org.xjcraft.login.manager.Manager;
 
 import static org.xjcraft.login.bean.Constant.CHANNEL;
 
 public class SpigotListener implements Listener, PluginMessageListener {
     private Spigot plugin;
+    private final Manager manager;
 
-    public SpigotListener(Spigot plugin) {
+    public SpigotListener(Spigot plugin, Manager manager) {
         this.plugin = plugin;
+        this.manager = manager;
     }
 
     @Override
@@ -25,8 +29,13 @@ public class SpigotListener implements Listener, PluginMessageListener {
         if (CHANNEL.equals(channel)) {
             ByteArrayDataInput in = ByteStreams.newDataInput(message);
             String text = in.readUTF();
-            Bukkit.broadcastMessage(text);
-//            plugin.getServer().getConsoleSender().sendRawMessage(text);
+//            Bukkit.broadcastMessage(text);
+            Bukkit.getConsoleSender().sendMessage(text);
+            for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                Account account = manager.getCachedAccount(p.getName());
+                if (account.getMute()) continue;
+                p.sendMessage(text);
+            }
         }
     }
 
@@ -34,8 +43,9 @@ public class SpigotListener implements Listener, PluginMessageListener {
     public void chat(AsyncPlayerChatEvent event) {
         String name = event.getPlayer().getName();
         String message = event.getMessage();
-        if (!message.startsWith("#")) return;
-        message = message.substring(1);
+        Account account = manager.getCachedAccount(name);
+        if (account.getHide()) return;
+//        message = message.substring(1);
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF(name);
         out.writeUTF(message);
