@@ -44,8 +44,8 @@ public class BungeeListener implements Listener {
     private long cmdOnlineTimestamp = 0;
     ScheduledTask task;
     private final AtomicInteger lock = new AtomicInteger();
-    Cache<String, Boolean> receiveCache;
-    Cache<String, Set<Long>> sendCache;
+    final Cache<String, Boolean> receiveCache;
+    final Cache<String, Set<Long>> sendCache;
 
     public BungeeListener(Bungee plugin, Manager manager) {
         this.plugin = plugin;
@@ -54,13 +54,15 @@ public class BungeeListener implements Listener {
         receiveCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(10, TimeUnit.SECONDS).build();
         sendCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(10, TimeUnit.SECONDS)
                 .expireAfterWrite(10, TimeUnit.SECONDS)
                 .removalListener((RemovalListener<String, Set<Long>>) notification -> {
                     if (notification.getCause() == RemovalCause.EXPIRED) {
+                        plugin.getLogger().info("resend  messages to qq group:" + StringUtil.join(chats.toArray(), ";"));
                         MiraiBot.getOnlineBots().stream().filter(id -> !notification.getValue().contains(id)).findAny().ifPresent(aLong -> {
                             MiraiBot bot = MiraiBot.getBot(aLong);
                             bot.getGroup(225962968L).sendMessage(notification.getKey());
-                            plugin.getLogger().info("resend  messages via " + bot.getID() + " to qq group:" + StringUtil.join(chats.toArray(), ";"));
+                            plugin.getLogger().info("via bot:" + bot.getID());
 
                         });
                     }
@@ -110,6 +112,7 @@ public class BungeeListener implements Listener {
         if (event.getGroupID() == 225962968L) {
 //            System.out.println("MiraiGroupMessageEvent：" + Thread.currentThread().getName());
 //            System.out.println(event.getMessage());
+            sendCache.invalidate(event.getMessage());
             try {
                 if (MiraiBot.getBot(event.getSenderID()) != null) {
                     return;
@@ -122,11 +125,15 @@ public class BungeeListener implements Listener {
             }
 //            if (!event.getMessage().startsWith("#")) return;
 //            List<Long> onlineBots = MiraiBot.getOnlineBots();
-            String s = event.getSenderName() + event.getMessage();
-            if (receiveCache.get(s, () -> false)) {
-                return;
+
+            synchronized (receiveCache) {
+                String s = event.getSenderName() + event.getMessage();
+                if (receiveCache.get(s, () -> false)) {
+                    return;
+                }
+                receiveCache.put(s, true);
             }
-            receiveCache.put(s, true);
+
 //            if (event.getBotID() != onlineBots.get(0)) return;
             String name = null;
             try {
