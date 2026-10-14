@@ -1,7 +1,7 @@
 dataSource:
 #连接池地址
-  url: jdbc:mysql://localhost:25536/mc
+  url: jdbc:mariadb://192.168.31.99:3306/mc?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true
 #连接池用户名
   userName: mc
 #连接池密码
-  password: password
+  password: namibot

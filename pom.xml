@@ -17,6 +17,10 @@
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
+        <repository>
+            <id>papermc-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <build>
@@ -34,6 +38,13 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.48</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
@@ -84,19 +95,19 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>LATEST</version>
+            <version>1.18.48</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>3.4.2</version>
+            <version>5.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.30</version>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>3.3.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -111,5 +122,35 @@
             <version>1.7.1</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Velocity API 4.x（velocity 端，provided 不打进 jar） -->
+        <dependency>
+            <groupId>com.velocitypowered</groupId>
+            <artifactId>velocity-api</artifactId>
+            <version>4.1.2-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- MiraiMC Velocity 集成（velocity 端） -->
+        <dependency>
+            <groupId>io.github.dreamvoid</groupId>
+            <artifactId>MiraiMC-Velocity</artifactId>
+            <version>1.9.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- 读取 config.yml（velocity 端替代 bungee Configuration），provided -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.2</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
+
+    <!-- 独立构建：mvn -Pvelocity package 单独构建 velocity 端。
+         velocity-api / MiraiMC-Velocity / snakeyaml 已为基础依赖（provided），
+         默认构建与 velocity 构建均能编译；仅产物用途不同。 -->
+    <profiles>
+        <profile>
+            <id>velocity</id>
+        </profile>
+    </profiles>
 </project>

@@ -1,0 +1,16 @@
+{
+  "id": "xjlogin",
+  "name": "XJLogin",
+  "version": "1.0.2",
+  "description": "XJ服务器登录插件",
+  "authors": [
+    "Ree"
+  ],
+  "main": "org.xjcraft.login.velocity.VelocityLogin",
+  "dependencies": [
+    {
+      "id": "miraimc",
+      "optional": true
+    }
+  ]
+}
